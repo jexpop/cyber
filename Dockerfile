@@ -22,6 +22,10 @@ RUN pip install uv
 COPY backend/pyproject.toml backend/uv.lock* ./
 RUN uv sync --frozen
 
+# Instalar semgrep y asegurarse de que esté en el PATH
+RUN uv run pip install semgrep
+RUN ln -sf /app/.venv/bin/semgrep /usr/local/bin/semgrep
+
 # Copy backend source
 COPY backend/ ./
 
@@ -32,8 +36,6 @@ COPY --from=frontend-build /app/out ./static
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Expose port for Cloud Run / Azure Container Instances
 EXPOSE 8000
 
-# Start the FastAPI server
 CMD ["uv", "run", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
