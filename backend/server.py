@@ -10,7 +10,14 @@ from agents import Agent, Runner, trace
 from context import SECURITY_RESEARCHER_INSTRUCTIONS, get_analysis_prompt, enhance_summary
 from mcp_servers import create_semgrep_server
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
 load_dotenv()
+print("OPENAI_API_KEY:", bool(os.getenv("OPENAI_API_KEY")))
+print("Directorio actual:", os.getcwd())
 
 app = FastAPI(title="API de Analizador de Ciberseguridad")
 
@@ -108,7 +115,8 @@ async def analyze_code(request: AnalyzeRequest) -> SecurityReport:
         report = await run_security_analysis(request.code)
         return format_analysis_response(request.code, report)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"El análisis falló: {str(e)}")
+        logger.error(f"Error: {type(e).__name__}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
 
 
 @app.get("/health")
